@@ -1,21 +1,12 @@
 import discord
 import requests
-import base64
 import json
 from discord.ext import commands
 from discord import app_commands
 iedla = 1
-stringy = "TVRNMk9UVTJORE0zTmpZM05URXlNekk0TUEuRzRIZDhfLjlza3JQQmRPakRBN000Si1ybDk2Nlh5TWJZdjlOekk4ZnBUSm04"
-bites = stringy.encode('ascii')
-munched_bytes = base64.b64decode(bites)
-thingy = munched_bytes.decode('utf-8')
-
-
-
 
 def run_bot():
-
-
+    token = input("BOT_TOKEN")
     intents = discord.Intents.default()
     intents.message_content = True
 
@@ -187,7 +178,7 @@ def run_bot():
     Forecast_weather()
 
 
-    bot.run(thingy)
+    bot.run(token)
 
 if iedla == 1:
     run_bot()
