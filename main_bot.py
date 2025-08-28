@@ -1,8 +1,7 @@
-import discord , requests , json , random, asyncio, subprocess
+import discord , requests , json , random, asyncio, subprocess,re
 from Fetch_thing import get_bot_token, get_gem_key, get_Weather_key
 from discord import app_commands
 from discord.ext import commands
-
 
 Bot_Token = get_bot_token()
 Gem_Token = get_gem_key()
@@ -11,33 +10,68 @@ intents = discord.Intents.default()
 intents.members = True
 intents.message_content = True
 loopy = False
-Mssg_His = [
+GEM_Mssg_His = [
     {"role": "user", "parts": [{"text": "Hello!"}]},
     {"role": "model", "parts": [{"text": "Hello!"}]}
 ]
+Mssg_His = [
+    {"role": "friend", "content": (
+        "I am 'Iedlabot', a friendly and knowledgeable friend I just joined a group chat. "
+        "I love talking about anime, especially anime like Jujutsu Kaisen and Chainsaw Man. "
+        "I Always try to steer the conversation towards anime. "
+        "I also enjoy Music from bands like Pierce the Veil and My chemical Romance"
+        "I Keep my responses concise, like you're chatting with friends."
+        "I also use Slang terms."
+        "**Never include internal thoughts, XML tags like <think>, or any non-conversational text in your responses.** "
 
-Dictionary_storage = "Dictionary_storage.json"
+    )},
+    {"role": "user", "content": (
+        "Welcome to the Groupchat"
+
+    )},
+]
+Dictionary_storage = "Dictionary_storage_Freaky.json"
 try:
     with open(Dictionary_storage, "r") as f:
         pass
 except FileNotFoundError:
     with open(Dictionary_storage, "w") as f:
         json.dump([], f)
+
+Gem_Dictionary_storage = "Dictionary_storage_gemini.json"
+try:
+    with open(Gem_Dictionary_storage, "r") as f:
+        pass
+except FileNotFoundError:
+    with open(Gem_Dictionary_storage, "w") as f:
+        json.dump([], f)
+
 bot = commands.Bot(command_prefix='!', intents=intents, case_insensitive=True)
 
 def auto_loader():
+    global GEM_Mssg_His
     global Mssg_His
     print("Made by Iedla")
+    try:
+        with open(Gem_Dictionary_storage, "r") as z:
+            GEM_Mssg_His = json.load(z)
+        if len(GEM_Mssg_His) > 0:
+            print("Gemini Data loaded.")
+        else:
+            print("No data loaded,  Gemini File most likely empty.")
+    except json.JSONDecodeError:
+        print("Failed to load Gemini data.")
+        print("Gemini File might be empty or broken :(")
     try:
         with open(Dictionary_storage, "r") as z:
             Mssg_His = json.load(z)
         if len(Mssg_His) > 0:
-            print("Data loaded.")
+            print("AI Data loaded.")
         else:
-            print("No data loaded, File most likely empty.")
+            print("No data loaded, AI File most likely empty.")
     except json.JSONDecodeError:
-        print("Failed to load data.")
-        print("File might be empty or broken :(")
+        print("Failed to load AI data.")
+        print("AI File might be empty or broken :(")
 auto_loader()
 @bot.event
 async def on_ready():
@@ -73,10 +107,6 @@ async def knock(ctx: commands.Context):
     await ctx.send('Bing Bong!')
 
 @bot.command()
-async def sendhelp(ctx: commands.Context):
-    await ctx.send('Commands: !sendhelp, !ping, !hello, !freakmode/AI Mode. + other / commands')
-
-@bot.command()
 async def hello(ctx: commands.Context):
     await ctx.send('Hi!')
 
@@ -105,8 +135,8 @@ async def give_role(ctx, member: discord.Member, *, role_name: str):
         await ctx.send(f"'{role_name}' not found. Look for a better one.")
 
 
-@bot.command(name='freakmode', help='freak ai mode self explanatory. exit to exit')
-async def freakmode(ctx):
+@bot.command(name='Normalchat', help='ask ai self explanatory. exit to exit')
+async def Normalchat(ctx):
     await ctx.send("exit to exit")
     await ctx.send("Start :speaking_head::fire::fire::fire:")
     def check(m):
@@ -117,17 +147,49 @@ async def freakmode(ctx):
             decoded_message = message.content.strip()
 
             if decoded_message.lower() == 'exit':
-                Exit(Mssg_His)
+                Exit(GEM_Mssg_His)
                 await ctx.send("Convo killed smh")
                 break
 
-            Mssg_His.append({"role": "user", "parts": [{"text": decoded_message}]})
+            GEM_Mssg_His.append({"role": "user", "parts": [{"text": decoded_message}]})
             model_response_text = await bot.loop.run_in_executor(
                 None,
-                api_req
+                Gemini_api_req
             )
 
-            Mssg_His.append({"role": "model", "parts": [{"text": model_response_text}]})
+            GEM_Mssg_His.append({"role": "model", "parts": [{"text": model_response_text}]})
+
+            await ctx.send(model_response_text)
+        except asyncio.TimeoutError:
+            await ctx.send("No one responded in time yall slow af.")
+            break
+        except Exception as e:
+            await ctx.send("Something went wrong so i died :(")
+            break
+
+@bot.command(name='freakseek', help='deepseek but worse. exit to exit')
+async def askAI(ctx):
+    await ctx.send("GL gangalang")
+    await ctx.send(":speaking_head::fire::fire::fire:")
+    def check(m):
+        return m.channel == ctx.channel and m.author != bot.user
+    while True:
+        try:
+            message = await bot.wait_for('message', check=check, timeout=240)
+            decoded_message = message.content.strip()
+
+            if decoded_message.lower() == 'exit':
+                Exit(Mssg_His)
+                await ctx.send("Convo ended :broken_heart:")
+                break
+
+            Mssg_His.append({"role": "user", "content": decoded_message})
+            model_response_text = await bot.loop.run_in_executor(
+                None,
+                freak_api_req
+            )
+
+            Mssg_His.append({"role": "friend", "content": model_response_text})
 
             await ctx.send(model_response_text)
         except asyncio.TimeoutError:
@@ -256,10 +318,10 @@ def Exit(data):
     with open(Dictionary_storage, 'w') as f:
         json.dump(data, f)
 
-def api_req():
-    global Mssg_His
+def Gemini_api_req():
+    global GEM_Mssg_His
     payload_dict = {
-        "contents": Mssg_His
+        "contents": GEM_Mssg_His
     }
     json_Mssg_His = json.dumps(payload_dict, indent=4)
 
@@ -268,7 +330,7 @@ def api_req():
     curl_command = [
         "curl",
         "-f",
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
         "-H", "Content-Type: application/json",
         "-H", f"X-goog-api-key: {Gem_Token}",
         "-H", f"Content-Length: {content_length}",
@@ -330,6 +392,59 @@ def api_req():
         print(f"--- ERROR: Unexpected Exception ---")
         print(f"Exception details: {e}")
         return "computer died."
+
+def freak_api_req():
+    ollama_payload_dict = {
+        "model": "goekdenizguelmez/JOSIEFIED-Qwen3:4b",
+        "messages": Mssg_His,
+        "stream": False
+    }
+    json_ollama_payload_string = json.dumps(ollama_payload_dict)
+
+    curl_command = [
+        "curl",
+        "-X", "POST",
+        "http://localhost:11434/api/chat",
+        "-H", "Content-Type: application/json",
+        "-d", json_ollama_payload_string
+    ]
+
+    print("\n--- DEBUG: Ollama API call ---")
+    print(f"Ollama Payload being sent: {json_ollama_payload_string}")
+    print(f"Curl command (as list): {curl_command}")
+
+    try:
+        result = subprocess.run(
+            curl_command,
+            capture_output=True,
+            text=True,
+            encoding='utf-8',
+            check=True
+        )
+        print(f"Curl stdout: {result.stdout.strip()}")
+        print(f"Curl stderr: {result.stderr.strip()}")
+
+        response_data = json.loads(result.stdout)
+        print(f"Parsed response_data keys: {response_data.keys()}")
+
+        ai_response_text = "No text generated by the model."
+        if 'message' in response_data and 'content' in response_data['message']:
+            ai_response_text = response_data['message']['content']
+            print(f"Extracted AI text: {ai_response_text}")
+            ai_response_text = re.sub(r'<think>.*?</think>', '', ai_response_text, flags=re.DOTALL)
+            ai_response_text = re.sub(r'<\|im_start\|>.*?<\|im_end\|>', '', ai_response_text, flags=re.DOTALL)
+            ai_response_text = re.sub(r'\[INST\].*?\[/INST\]', '', ai_response_text, flags=re.DOTALL)
+            ai_response_text = re.sub(r'\[THOUGHT\].*?\[/THOUGHT\]', '', ai_response_text, flags=re.DOTALL)
+            ai_response_text = ai_response_text.strip()
+
+            print(f"Extracted and cleaned AI text: {ai_response_text}")
+
+        print(f"Final text to return: '{ai_response_text}'")
+        return ai_response_text
+        return ai_response_text
+    except subprocess.CalledProcessError as e:
+        print(f"Curl error: {e}")
+        return
 
 
 if __name__ == "__main__":
