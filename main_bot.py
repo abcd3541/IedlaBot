@@ -158,7 +158,7 @@ async def Normalchat(ctx):
             decoded_message = message.content.strip()
 
             if decoded_message.lower() == 'exit':
-                Exit(GEM_Mssg_His)
+                Exit(GEM_Mssg_His,is_gemini_history=True)
                 await ctx.send("Convo killed smh")
                 break
 
@@ -173,12 +173,12 @@ async def Normalchat(ctx):
             await ctx.send(model_response_text)
         except asyncio.TimeoutError:
             await ctx.send("No one responded in time yall slow af.")
-            Exit(GEM_Mssg_His)
+            Exit(GEM_Mssg_His,is_gemini_history=True)
             break
         except Exception as e:
             await ctx.send("Something went wrong so i died :(")
             print(e)
-            Exit(GEM_Mssg_His)
+            Exit(GEM_Mssg_His, is_gemini_history=True)
             break
 
 @bot.command(name='freakseek', help='freaky. exit to exit')
@@ -198,7 +198,7 @@ async def freakseek(ctx):
             decoded_message = message.content.strip()
             user_disname = message.author.name
             if decoded_message.lower() == 'exit':
-                Exit(Mssg_His)
+                Exit(Mssg_His,is_gemini_history=False)
                 await ctx.send("Convo ended :broken_heart:")
                 break
 
@@ -214,12 +214,12 @@ async def freakseek(ctx):
             await ctx.send(model_response_text)
         except asyncio.TimeoutError:
             await ctx.send("No one responded in time yall slow af.")
-            Exit(Mssg_His)
+            Exit(Mssg_His, is_gemini_history=False)
             break
         except Exception as e:
             await ctx.send("Something went wrong so i died :(")
             print(e)
-            Exit(Mssg_His)
+            Exit(Mssg_His, is_gemini_history=False)
             break
 
 #Slash Commands

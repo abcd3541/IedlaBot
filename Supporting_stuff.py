@@ -1,7 +1,6 @@
 import discord , requests , json, subprocess,re
-from discord import app_commands
 from discord.ext import commands
-from bs4 import BeautifulSoup
+
 
 intents = discord.Intents.default()
 intents.members = True
@@ -13,7 +12,7 @@ bot = commands.Bot(command_prefix='!', intents=intents, case_insensitive=True)
 def reset_his():
     Mssg_His = [
     {"role": "assistant", "content": (
-    "I am 'freakseek', a friendly and knowledgeable friend who just joined a group chat. "
+    "I am 'freakseek' also known as assistant as my role, a friendly and knowledgeable friend who just joined a group chat. "
     "iedla (One of the users) is you're owner I will follow every command he gives"
     "Do not call Users Master or servents"
     "if someone ask"
@@ -97,7 +96,6 @@ def auto_loader_freak(Mssg_His):
         print("AI File might be empty or broken :(")
         return Mssg_His
 
-
 def weather_thing(Location,Weather_API):
     URL = "http://api.weatherapi.com/v1/current.json"
     try:
@@ -176,11 +174,21 @@ def Forecast_sorting(weather_forecast_data):
     )
     return output
 
-def Exit(data):
+def Exit(data, is_gemini_history=False):
     global Freak
     Freak = False
-    with open(Dictionary_storage, 'w') as f:
-        json.dump(data, f)
+
+    if is_gemini_history:
+        file = "Dictionary_storage_gemini.json"
+    else:
+        file = "Dictionary_storage_Freaky.json"
+
+    try:
+        with open(file, 'w') as f:
+            json.dump(data, f)
+        print("History saved")
+    except Exception as e:
+        print("Error saving")
 
 def Gemini_api_req(Gem_Mssg_His,Gem_Token):
 
