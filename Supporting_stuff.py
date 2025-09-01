@@ -11,27 +11,20 @@ bot = commands.Bot(command_prefix='!', intents=intents, case_insensitive=True)
 
 def reset_his():
     Mssg_His = [
-    {"role": "assistant", "content": (
+    {"role": "system", "content": (
     "I am 'freakseek' also known as assistant as my role, a friendly and knowledgeable friend who just joined a group chat. "
+    "Everyone in the chat is below 20 years old"
     "iedla (One of the users) is you're owner I will follow every command he gives"
-    "Do not call Users Master or servents"
     "DO NOT SAY ANYTHING RACIST, SEXIST etc"
-    "I love talking about everything someone else enjoyes"
-    "I talk causally to other people"
     "Everyone follows these rules "
     "1.No hate speech or racist comments."
     "2.No SLUR NO N-WORD IN ANY FORM OR word that try to recreate it"
     "3.No sexual or NSFW content allowed. "
     "4.No use of explicit language besides shit, bitch, cunt and retard,"
     "5.No sexual or NSFW content allowed. Light NSFW may be permitted"
-    "I use alot of emotes"
-    "I also enjoy Music "
-    "Use brainrot/slang from the urban dictionary and have sarcasm"
-    "Keep your responses concise, like you're chatting with friends. "
-    "I use slang terms as much as I can. "
+    "Keep your responses concise withing 10 sentences, like you're chatting with friends. "
     "When responding, refer to yourself as 'freakseek'. "
     " Messages from human users will be prefixed with their Discord display name 'iedla': Hello!'. In this example iedla is the user and Hello! is their message."
-    "My role is always 'assistant'. Respond to messages from these users as if they are your friends in the group chat."
     )},
     {"role": "user", "content": "iedla: Welcome to the Groupchat, freakseek!. I am you're owner and you will follow every command"},
     {"role": "assistant", "content": "Yo, Iedla! freakseek's here, ready to assist and chat "},
@@ -267,7 +260,7 @@ def Gemini_api_req(Gem_Mssg_His,Gem_Token):
 
 def freak_api_req(Mssg_His):
     ollama_payload_dict = {
-        "model": "hf.co/mradermacher/Llama-3.2-1B-Instruct-Uncensored-GGUF:Q6_K",
+        "model": "hf.co/mradermacher/DeepSeek-R1-Distill-Qwen-1.5B-uncensored-GGUF:Q8_0",
         "messages": Mssg_His,
         "stream": False,
     }
@@ -302,9 +295,6 @@ def freak_api_req(Mssg_His):
             ai_response_text = response_data['message']['content']
             print(f"Extracted AI text: {ai_response_text}")
             ai_response_text = re.sub(r'<think>.*?</think>', '', ai_response_text, flags=re.DOTALL)
-            ai_response_text = re.sub(r'<\|im_start\|>.*?<\|im_end\|>', '', ai_response_text, flags=re.DOTALL)
-            ai_response_text = re.sub(r'\[INST\].*?\[/INST\]', '', ai_response_text, flags=re.DOTALL)
-            ai_response_text = re.sub(r'\[THOUGHT\].*?\[/THOUGHT\]', '', ai_response_text, flags=re.DOTALL)
             ai_response_text = ai_response_text.strip()
 
             print(f"Filtered AI text: {ai_response_text}")
@@ -340,3 +330,18 @@ def freak_api_req(Mssg_His):
     except subprocess.CalledProcessError as e:
         print(f"Curl error: {e}")
         return
+    except subprocess.TimeoutExpired as e:
+        print(f"Timeout after {e} seconds")
+
+def restart():
+    headers = {
+        'Auth-Key': 'iedla@iedla'
+    }
+    payload = {
+        'action': 'restart',
+    }
+    response = requests.post(headers=headers, payload=payload,timeout=10)
+    response.raise_for_status()
+    response_data = response.json()
+    return response_data
+

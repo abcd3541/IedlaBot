@@ -1,7 +1,7 @@
 import discord , requests , json , random, asyncio
 from Fetch_thing import get_bot_token, get_gem_key, get_Weather_key
 from Supporting_stuff import reset_his, auto_loader_freak, Json_storage, weather_thing, weather_forecast, \
-    freak_api_req, Gemini_api_req, Exit, auto_loader_gemini
+    freak_api_req, Gemini_api_req, Exit, auto_loader_gemini, restart
 from boblox_fetch import find_apac_roblox_servers, split_message
 from discord import app_commands
 from discord.ext import commands
@@ -94,6 +94,12 @@ async def bonkfreakseek(ctx: commands.Context):
         await ctx.send('Bonked :wilted_rose:')
     except FileNotFoundError:
         await ctx.send("file gone.")
+
+@bot.command(name='restart', help='restarts the bot')
+async def restart(ctx: commands.Context):
+    await ctx.send('Restarting...')
+    restart()
+
 
 
 @bot.event
