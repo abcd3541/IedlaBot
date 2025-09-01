@@ -1,7 +1,7 @@
 import discord , requests , json , random, asyncio
 from Fetch_thing import get_bot_token, get_gem_key, get_Weather_key
 from Supporting_stuff import reset_his, auto_loader_freak, Json_storage, weather_thing, weather_forecast, \
-    freak_api_req, Gemini_api_req, Exit, auto_loader_gemini, restart
+    freak_api_req, Gemini_api_req, Exit, auto_loader_gemini, bot_restart_now,kill_my_bot
 from boblox_fetch import find_apac_roblox_servers, split_message
 from discord import app_commands
 from discord.ext import commands
@@ -96,12 +96,18 @@ async def bonkfreakseek(ctx: commands.Context):
         await ctx.send("file gone.")
 
 @bot.command(name='restart', help='restarts the bot')
-async def restart(ctx: commands.Context):
+async def bot_restart(ctx: commands.Context):
     await ctx.send('Restarting...')
-    restart()
+    await ctx.send(bot_restart_now())
 
 
-
+@bot.command(name='kill', help='stops the bot')
+async def kill_bot(ctx: commands.Context):
+    if ctx.author.id == 731417760927711232:
+        await ctx.send('Stopping...')
+        print(kill_my_bot())
+    else:
+        await ctx.send('Not iedla, no perms.')
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user} (ID: {bot.user.id})')

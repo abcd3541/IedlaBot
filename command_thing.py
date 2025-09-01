@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 import subprocess, time, os , signal
-app = Flask(__name__)
 
+app = Flask(__name__)
 Webhook_key = "iedla@iedla"
 Bot_Path = 'main_bot.py'
 Bot_Command = ['python', Bot_Path]
@@ -41,6 +41,8 @@ def kill_bot():
         on_process = True
         return
 
+
+
 @app.route('/webhook', methods=['POST'])
 def webhook():
     request_header = request.headers.get('Auth_Key')
@@ -48,14 +50,17 @@ def webhook():
         return jsonify({'error': 'invalid auth key'})
 
     data = request.json
-    if data is None or 'action' != data:
+    if data is None or 'action' not in data:
         return jsonify({'error': 'no action requested'})
 
     API_request = data['action']
 
     if API_request == 'restart':
+        kill_bot()
         turn_on()
-        return jsonify({'status': 'turning on'})
+        return jsonify({'status': 'restarting'})
+
+
     elif API_request == 'stop':
         kill_bot()
         return jsonify({'status': 'stopping'})
@@ -64,11 +69,13 @@ def webhook():
         return jsonify({'error': 'invalid action'})
 
 if __name__ == '__main__':
+    print("starting bot")
+    turn_on()
     try:
-        app.run(host='0.0.0.0', port=5000)
+        app.run(host='0.0.0.0', port=5000,debug=False, use_reloader=False)
     except Exception as error:
         print(f'execution error due to {error}')
-    turn_on()
+
 
 
 

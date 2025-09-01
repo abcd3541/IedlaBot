@@ -8,6 +8,8 @@ intents.message_content = True
 loopy = False
 Freak = False
 bot = commands.Bot(command_prefix='!', intents=intents, case_insensitive=True)
+bot_api_url = 'http://localhost:5000/webhook'
+
 
 def reset_his():
     Mssg_His = [
@@ -333,15 +335,27 @@ def freak_api_req(Mssg_His):
     except subprocess.TimeoutExpired as e:
         print(f"Timeout after {e} seconds")
 
-def restart():
+def bot_restart_now():
     headers = {
         'Auth-Key': 'iedla@iedla'
     }
     payload = {
         'action': 'restart',
     }
-    response = requests.post(headers=headers, payload=payload,timeout=10)
+    response = requests.post(bot_api_url, headers=headers, json=payload,timeout=10)
     response.raise_for_status()
     response_data = response.json()
     return response_data
 
+def kill_my_bot():
+
+    headers = {
+        'Auth-Key': 'iedla@iedla'
+    }
+    payload = {
+        'action': 'stop',
+    }
+    response = requests.post(bot_api_url, headers=headers, json=payload,timeout=10)
+    response.raise_for_status()
+    response_data = response.json()
+    return response_data

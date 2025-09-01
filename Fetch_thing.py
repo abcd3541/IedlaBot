@@ -1,7 +1,7 @@
 import requests, base64
 from bs4 import BeautifulSoup
-thingy = input("enter code")
-keycode = input("enter keycode")
+thingy = '123'
+keycode = "Sus"
 
 url = "https://iedla.cloud/"+thingy+"iedla_keys.html"
 url2 = "https://iedla.cloud/"+thingy+"iedla_keys1.html"
@@ -44,7 +44,7 @@ def get_gem_key():
         bite_text = text.encode('utf-8')
         bite_text = base64.b64decode(bite_text)
         plain_text = bite_text.decode('utf-8')
-        secret = input("enter secret code")
+        secret = 'wjw'
         final = plain_text+secret
         return final
 
