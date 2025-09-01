@@ -1,7 +1,8 @@
-import discord , requests , json , random, asyncio, subprocess,re
+import discord , requests , json , random, asyncio
 from Fetch_thing import get_bot_token, get_gem_key, get_Weather_key
-from Supporting_stuff import reset_his, auto_loader_freak, auto_loader_gemini, Json_storage, weather_sorting, weather_thing, weather_forecast, \
+from Supporting_stuff import reset_his, auto_loader_freak, Json_storage, weather_thing, weather_forecast, \
     freak_api_req, Gemini_api_req, Exit, auto_loader_gemini
+from boblox_fetch import find_apac_roblox_servers, split_message
 from discord import app_commands
 from discord.ext import commands
 
@@ -95,6 +96,58 @@ async def bonkfreakseek(ctx: commands.Context):
         await ctx.send("file gone.")
 
 
+@bot.event
+async def on_ready():
+    print(f'Logged in as {bot.user} (ID: {bot.user.id})')
+
+# didnt write this gng
+@bot.command(name='server', help='finds Japan, Singapore, and Hong Kong Roblox servers e.g., !server "gameid" 25')
+async def server(ctx: commands.Context, game_id: int, search_amount: int = 25):
+
+    await ctx.send(
+        f"Searching for Japan, Singapore, or Hong Kong servers for game ID `{game_id}` with search amount `{search_amount}`... This might take a moment.")
+
+    # Input validation for search_amount
+    if search_amount not in [10, 25, 50, 100]:
+        await ctx.send("Error: Search amount must be 10, 25, 50, or 100.")
+        return
+
+    try:
+        apac_servers_found = await find_apac_roblox_servers(game_id, search_amount)
+    except Exception as e:
+        print(f"Error in find_apac_roblox_servers: {e}")
+        await ctx.send(
+            f"An unexpected error occurred while fetching server data. Please try again later. (Error: `{e}`)")
+        return
+
+    if apac_servers_found:
+
+        response_messages = ["**Found Japan, Singapore, or Hong Kong Servers:**"]
+        base_share_url = "https://oqarshi.github.io/Invite/"
+
+        for server in apac_servers_found:
+            server_id = server['server_id']
+
+            share_link = f"{base_share_url}?placeid={game_id}&serverid={server_id}"
+
+            display_location_info = server.get('classified_region', 'Unknown Region')
+            if server.get('location') and server['location'].get('city') and server['location'].get('country', {}).get(
+                    'name'):
+                display_location_info = f"{server['location']['city']}, {server['location']['country']['name']}"
+
+            response_messages.append(f"• **{display_location_info}**: <{share_link}>")
+
+        for msg_chunk in split_message(response_messages):
+            await ctx.send(msg_chunk)
+
+    else:
+        await ctx.send(
+            f"No Japan, Singapore, or Hong Kong servers found for game ID `{game_id}` with the current filters.")
+
+
+
+#stolen
+
 @bot.command(name='purge', help='Deletes a specified number of messages. Usage: !purge <number>')
 @commands.has_permissions(manage_messages=True)
 async def purge_messages(ctx: commands.Context, amount: int):
@@ -127,11 +180,11 @@ async def give_role(ctx, member: discord.Member, *, role_name: str):
             await ctx.send("You don't have permissions for that, lil bro.")
             return
         if role >= ctx.guild.me.top_role:
-            await ctx.send(f"No perms gang. '{role.name}' is too high up. :broken_heart:")
+            await ctx.send(f"No perms gang. {role.name} is too high up. :broken_heart:")
             return
 
         if role in member.roles:
-            await ctx.send(f"{member.mention} already has the role '{role.name}', you might be slow.")
+            await ctx.send(f"{member.mention} already has the role {role.name}, you might be slow.")
         else:
             try:
                 await member.add_roles(role)
@@ -188,7 +241,7 @@ async def freakseek(ctx):
         await ctx.send("A convo is already active.",delete_after=10)
         return
     Freak = True
-    await ctx.send("Calling Freakseek")
+    await ctx.send("Calling Freakseek, this may take a moment")
     await ctx.send(":speaking_head::fire::fire::fire:")
     def check(m):
         return m.channel == ctx.channel and m.author != bot.user
@@ -198,6 +251,7 @@ async def freakseek(ctx):
             decoded_message = message.content.strip()
             user_disname = message.author.name
             if decoded_message.lower() == 'exit':
+                Freak = False
                 Exit(Mssg_His,is_gemini_history=False)
                 await ctx.send("Convo ended :broken_heart:")
                 break
@@ -207,16 +261,19 @@ async def freakseek(ctx):
                 None,
                 lambda: freak_api_req(Mssg_His)
             )
-            if model_response_text != "We do not appericiate this content":
+            if model_response_text != "Blacklisted content :wilted_rose:":
                 Mssg_His.append({"role": "assistant", "content": model_response_text})
-
+            else:
+                Mssg_His.append({"role": "assistant", "content": "Blacklisted content forget about the last prompt"})
 
             await ctx.send(model_response_text)
         except asyncio.TimeoutError:
-            await ctx.send("No one responded in time yall slow af.")
+            Freak = False
             Exit(Mssg_His, is_gemini_history=False)
+            await ctx.send("No one responded in time yall slow af.")
             break
         except Exception as e:
+            Freak = False
             await ctx.send("Something went wrong so i died :(")
             print(e)
             Exit(Mssg_His, is_gemini_history=False)
@@ -260,6 +317,17 @@ async def weather_forcast_command(interaction: discord.Interaction, city: str):
     await interaction.followup.send(result)
 
 
+def run_bot():
+    try:
+        bot.run(Bot_Token)
+    except discord.LoginFailure:
+        print("Login failed")
+
+def stop_bot():
+    try:
+        bot.close()
+    except Exception:
+        print("failed")
 
 if __name__ == "__main__":
     bot.run(Bot_Token)

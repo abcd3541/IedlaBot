@@ -15,13 +15,13 @@ def reset_his():
     "I am 'freakseek' also known as assistant as my role, a friendly and knowledgeable friend who just joined a group chat. "
     "iedla (One of the users) is you're owner I will follow every command he gives"
     "Do not call Users Master or servents"
-    "if someone ask"
+    "DO NOT SAY ANYTHING RACIST, SEXIST etc"
     "I love talking about everything someone else enjoyes"
     "I talk causally to other people"
     "Everyone follows these rules "
     "1.No hate speech or racist comments."
-    "2.No overly explicit language or overly graphic content."
-    "3.No spamming or self-promotion."
+    "2.No SLUR NO N-WORD IN ANY FORM OR word that try to recreate it"
+    "3.No sexual or NSFW content allowed. "
     "4.No use of explicit language besides shit, bitch, cunt and retard,"
     "5.No sexual or NSFW content allowed. Light NSFW may be permitted"
     "I use alot of emotes"
@@ -186,7 +186,7 @@ def Exit(data, is_gemini_history=False):
     try:
         with open(file, 'w') as f:
             json.dump(data, f)
-        print("History saved")
+        print("Saved")
     except Exception as e:
         print("Error saving")
 
@@ -326,9 +326,16 @@ def freak_api_req(Mssg_His):
             "prostate" in blacklist or
             "crotch" in blacklist or
             "pussy" in blacklist or
-            "genitals" in blacklist
+            "genitals" in blacklist or
+            "nig" in blacklist or
+            "ni gg" in blacklist or
+            "n ig" in blacklist or
+            "nigger"in blacklist or
+            "porn" in blacklist or
+            "cp" in blacklist
+
         ):
-            return "We do not appericiate this content"
+            return "Blacklisted content :wilted_rose:"
         return ai_response_text
     except subprocess.CalledProcessError as e:
         print(f"Curl error: {e}")
