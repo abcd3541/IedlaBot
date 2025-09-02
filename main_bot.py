@@ -89,13 +89,13 @@ async def knock(ctx: commands.Context):
 async def hello(ctx: commands.Context):
     await ctx.send('Hi!')
 
-@bot.command(name='bonkfreakseek', help='clears memory')
-async def bonkfreakseek(ctx: commands.Context):
+@bot.command(name='lobotomize', help='clears memory')
+async def lobotomize(ctx: commands.Context):
     reset_his()
     try:
         with open(Dictionary_storage, "w") as f:
             json.dump(Mssg_His, f)
-        await ctx.send('Bonked :wilted_rose:')
+        await ctx.send('lobotomized :wilted_rose:')
     except FileNotFoundError:
         await ctx.send("file gone.")
 
