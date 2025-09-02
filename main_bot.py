@@ -1,10 +1,12 @@
-import discord , requests , json , random, asyncio
+
+import discord , requests , json , random, asyncio, subprocess, time, signal, os
 from Fetch_thing import get_bot_token, get_gem_key, get_Weather_key
 from Supporting_stuff import reset_his, auto_loader_freak, Json_storage, weather_thing, weather_forecast, \
     freak_api_req, Gemini_api_req, Exit, auto_loader_gemini, bot_restart_now,kill_my_bot
 from boblox_fetch import find_apac_roblox_servers, split_message
 from discord import app_commands
 from discord.ext import commands
+ollama_path = "C:\\Users\\Iedla's stuff\\AppData\\Local\\Programs\\Ollama"
 
 Bot_Token = get_bot_token()
 Gem_Token = get_gem_key()
@@ -15,6 +17,8 @@ intents.message_content = True
 loopy = False
 Freak = False
 gemini = False
+ollama_command = 'ollama serve'
+ollama = False
 Mssg_His = reset_his()
 Dictionary_storage = "Dictionary_storage_Freaky.json"
 Gem_Dictionary_storage = "Dictionary_storage_gemini.json"
@@ -108,6 +112,7 @@ async def kill_bot(ctx: commands.Context):
         print(kill_my_bot())
     else:
         await ctx.send('Not iedla, no perms.')
+
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user} (ID: {bot.user.id})')
@@ -159,7 +164,6 @@ async def server(ctx: commands.Context, game_id: int, search_amount: int = 25):
 
 
 #stolen
-
 @bot.command(name='purge', help='Deletes a specified number of messages. Usage: !purge <number>')
 @commands.has_permissions(manage_messages=True)
 async def purge_messages(ctx: commands.Context, amount: int):
@@ -207,6 +211,7 @@ async def give_role(ctx, member: discord.Member, *, role_name: str):
         await ctx.send(f"'{role_name}' not found. Look for a better one.")
 
 
+
 @bot.command(name='Normalchat', help='ask ai self explanatory. exit to exit')
 async def Normalchat(ctx):
     global gemini
@@ -246,13 +251,15 @@ async def Normalchat(ctx):
             Exit(GEM_Mssg_His, is_gemini_history=True)
             break
 
-@bot.command(name='freakseek', help='freaky. exit to exit')
+@bot.command(name='freakseek', help='seek the freak')
 async def freakseek(ctx):
     global Freak
     if Freak == True:
         await ctx.send("A convo is already active.",delete_after=10)
         return
     Freak = True
+    ollama_status = open_ollama()
+    await ctx.send(ollama_status)
     await ctx.send("Calling Freakseek, this may take a moment")
     await ctx.send(":speaking_head::fire::fire::fire:")
     def check(m):
@@ -266,6 +273,8 @@ async def freakseek(ctx):
                 Freak = False
                 Exit(Mssg_His,is_gemini_history=False)
                 await ctx.send("Convo ended :broken_heart:")
+                ollama_status = close_ollama()
+                await ctx.send(ollama_status)
                 break
 
             Mssg_His.append({"role": "user", "content": f"{user_disname}: {decoded_message}"})
@@ -283,12 +292,16 @@ async def freakseek(ctx):
             Freak = False
             Exit(Mssg_His, is_gemini_history=False)
             await ctx.send("No one responded in time yall slow af.")
+            ollama_status = close_ollama()
+            await ctx.send(ollama_status)
             break
         except Exception as e:
             Freak = False
             await ctx.send("Something went wrong so i died :(")
             print(e)
             Exit(Mssg_His, is_gemini_history=False)
+            ollama_status = close_ollama()
+            await ctx.send(ollama_status)
             break
 
 #Slash Commands
@@ -328,18 +341,31 @@ async def weather_forcast_command(interaction: discord.Interaction, city: str):
     result = weather_forecast(city,Weather_API)
     await interaction.followup.send(result)
 
+#other_stuff
+def open_ollama():
+    global ollama
+    if ollama == False:
+        subprocess.Popen(ollama_command,stdout=subprocess.PIPE)
+        time.sleep(1.5)
+        ollama = True
+        return 'ollama initializing'
+    else:
+        return 'ollama already running'
 
-def run_bot():
-    try:
-        bot.run(Bot_Token)
-    except discord.LoginFailure:
-        print("Login failed")
+def close_ollama():
+    global ollama
+    if ollama == True:
+        try:
+            subprocess.run('taskkill /F /IM ollama.exe /T')
+            ollama = False
+            return 'ollama closed'
+        except Exception as e:
+            return f'failed to close ollama {e}'
+    else:
+        return 'ollama already closed'
 
-def stop_bot():
-    try:
-        bot.close()
-    except Exception:
-        print("failed")
+
+
 
 if __name__ == "__main__":
     bot.run(Bot_Token)

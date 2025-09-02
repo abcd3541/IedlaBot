@@ -16,7 +16,7 @@ def turn_on():
         return
     try:
         print("Turning on bot")
-        Process = subprocess.Popen(Bot_Command, stdout=subprocess.PIPE)
+        Process = subprocess.Popen(Bot_Command)
         time.sleep(1.5)
         on_process = True
         return
@@ -57,6 +57,7 @@ def webhook():
 
     if API_request == 'restart':
         kill_bot()
+        time.sleep(5)
         turn_on()
         return jsonify({'status': 'restarting'})
 
