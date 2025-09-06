@@ -57,7 +57,6 @@ def webhook():
 
     if API_request == 'restart':
         kill_bot()
-        time.sleep(5)
         turn_on()
         return jsonify({'status': 'restarting'})
 
@@ -70,7 +69,6 @@ def webhook():
         return jsonify({'error': 'invalid action'})
 
 if __name__ == '__main__':
-    print("starting bot")
     turn_on()
     try:
         app.run(host='0.0.0.0', port=5000,debug=False, use_reloader=False)

@@ -1,12 +1,12 @@
 
-import discord , requests , json , random, asyncio, subprocess, time, signal, os
+import discord , requests , json , random, asyncio, subprocess, time
 from Fetch_thing import get_bot_token, get_gem_key, get_Weather_key
 from Supporting_stuff import reset_his, auto_loader_freak, Json_storage, weather_thing, weather_forecast, \
-    freak_api_req, Gemini_api_req, Exit, auto_loader_gemini, bot_restart_now,kill_my_bot
+    freak_api_req, Gemini_api_req, Exit, auto_loader_gemini, bot_restart_now,kill_my_bot,todo_lst, get_todolst,\
+    add_task, save_todo, del_task,uncensored_api_req, auto_loader_uncen, uncen_reset_his
 from boblox_fetch import find_apac_roblox_servers, split_message
 from discord import app_commands
 from discord.ext import commands
-ollama_path = "C:\\Users\\Iedla's stuff\\AppData\\Local\\Programs\\Ollama"
 
 Bot_Token = get_bot_token()
 Gem_Token = get_gem_key()
@@ -16,11 +16,14 @@ intents.members = True
 intents.message_content = True
 loopy = False
 Freak = False
+seek = False
 gemini = False
 ollama_command = 'ollama serve'
 ollama = False
 Mssg_His = reset_his()
+uncen_Mssg_His = uncen_reset_his()
 Dictionary_storage = "Dictionary_storage_Freaky.json"
+uncen_Dictionary_storage = "Dictionary_storage_Freaky.json"
 Gem_Dictionary_storage = "Dictionary_storage_gemini.json"
 GEM_Mssg_His = [
     {"role": "user", "parts": [{"text": "Hello!"}]},
@@ -32,7 +35,7 @@ bot = commands.Bot(command_prefix='!', intents=intents, case_insensitive=True)
 Json_storage(Mssg_His,GEM_Mssg_His)
 GEM_Mssg_His = auto_loader_gemini(GEM_Mssg_His)
 Mssg_His = auto_loader_freak(Mssg_His)
-
+uncen_Mssg_His = auto_loader_uncen(uncen_Mssg_His)
 
 async def on_ready():
     print(f'Logged in as {bot.user} (ID: {bot.user.id})')
@@ -89,8 +92,8 @@ async def knock(ctx: commands.Context):
 async def hello(ctx: commands.Context):
     await ctx.send('Hi!')
 
-@bot.command(name='lobotomize', help='clears memory')
-async def lobotomize(ctx: commands.Context):
+@bot.command(name='bonkfreakseek', help='clears memory')
+async def bonkfreakseek(ctx: commands.Context):
     reset_his()
     try:
         with open(Dictionary_storage, "w") as f:
@@ -98,6 +101,17 @@ async def lobotomize(ctx: commands.Context):
         await ctx.send('lobotomized :wilted_rose:')
     except FileNotFoundError:
         await ctx.send("file gone.")
+
+@bot.command(name='lobotomize', help='clears freaky ai memory')
+async def lobotomize(ctx: commands.Context):
+    uncen_reset_his()
+    try:
+        with open(Dictionary_storage, "w") as f:
+            json.dump(uncen_Mssg_His, f)
+        await ctx.send('lobotomized :wilted_rose:')
+    except FileNotFoundError:
+        await ctx.send("file gone.")
+
 
 @bot.command(name='restart', help='restarts the bot')
 async def bot_restart(ctx: commands.Context):
@@ -113,9 +127,6 @@ async def kill_bot(ctx: commands.Context):
     else:
         await ctx.send('Not iedla, no perms.')
 
-@bot.event
-async def on_ready():
-    print(f'Logged in as {bot.user} (ID: {bot.user.id})')
 
 # didnt write this gng
 @bot.command(name='server', help='finds Japan, Singapore, and Hong Kong Roblox servers e.g., !server "gameid" 25')
@@ -160,7 +171,7 @@ async def server(ctx: commands.Context, game_id: int, search_amount: int = 25):
     else:
         await ctx.send(
             f"No Japan, Singapore, or Hong Kong servers found for game ID `{game_id}` with the current filters.")
-
+#
 
 
 #stolen
@@ -185,6 +196,8 @@ async def purge_messages(ctx: commands.Context, amount: int):
         await ctx.send(f"An error occurred while deleting messages: {e}", delete_after=10)
     except Exception as e:
         await ctx.send(f"An unexpected error occurred: {e}", delete_after=10)
+#
+
 
 @bot.command(name='roleuser', help='Gives a role to a user.')
 @commands.has_permissions(manage_roles=True)
@@ -210,8 +223,6 @@ async def give_role(ctx, member: discord.Member, *, role_name: str):
     else:
         await ctx.send(f"'{role_name}' not found. Look for a better one.")
 
-
-
 @bot.command(name='Normalchat', help='ask ai self explanatory. exit to exit')
 async def Normalchat(ctx):
     global gemini
@@ -228,7 +239,7 @@ async def Normalchat(ctx):
             decoded_message = message.content.strip()
 
             if decoded_message.lower() == 'exit':
-                Exit(GEM_Mssg_His,is_gemini_history=True)
+                Exit(GEM_Mssg_His,is_gemini_history=True,freakseek=False)
                 await ctx.send("Convo killed smh")
                 break
 
@@ -243,12 +254,12 @@ async def Normalchat(ctx):
             await ctx.send(model_response_text)
         except asyncio.TimeoutError:
             await ctx.send("No one responded in time yall slow af.")
-            Exit(GEM_Mssg_His,is_gemini_history=True)
+            Exit(GEM_Mssg_His,is_gemini_history=True,freakseek=False)
             break
         except Exception as e:
             await ctx.send("Something went wrong so i died :(")
             print(e)
-            Exit(GEM_Mssg_His, is_gemini_history=True)
+            Exit(GEM_Mssg_His, is_gemini_history=True,freakseek=False)
             break
 
 @bot.command(name='freakseek', help='seek the freak')
@@ -271,7 +282,7 @@ async def freakseek(ctx):
             user_disname = message.author.name
             if decoded_message.lower() == 'exit':
                 Freak = False
-                Exit(Mssg_His,is_gemini_history=False)
+                Exit(Mssg_His,is_gemini_history=False,freakseek=True)
                 await ctx.send("Convo ended :broken_heart:")
                 ollama_status = close_ollama()
                 await ctx.send(ollama_status)
@@ -290,7 +301,7 @@ async def freakseek(ctx):
             await ctx.send(model_response_text)
         except asyncio.TimeoutError:
             Freak = False
-            Exit(Mssg_His, is_gemini_history=False)
+            Exit(Mssg_His, is_gemini_history=False,freakseek=True)
             await ctx.send("No one responded in time yall slow af.")
             ollama_status = close_ollama()
             await ctx.send(ollama_status)
@@ -299,10 +310,150 @@ async def freakseek(ctx):
             Freak = False
             await ctx.send("Something went wrong so i died :(")
             print(e)
-            Exit(Mssg_His, is_gemini_history=False)
+            Exit(Mssg_His, is_gemini_history=False,freakseek=True)
             ollama_status = close_ollama()
             await ctx.send(ollama_status)
             break
+
+@bot.command(name='freak', help='freak seeking you, Uncensored')
+async def seekfreak(ctx):
+    global seek
+    if seek == True:
+        await ctx.send("A convo is already active.",delete_after=10)
+        return
+    seek = True
+    ollama_status = open_ollama()
+    await ctx.send(ollama_status)
+    await ctx.send("Calling the **one**, this may take a moment")
+    def check(m):
+        return m.channel == ctx.channel and m.author != bot.user
+    while True:
+        try:
+            message = await bot.wait_for('message', check=check, timeout=240)
+            decoded_message = message.content.strip()
+            user_disname = message.author.name
+            if decoded_message.lower() == 'exit':
+                seek = False
+                Exit(uncen_Mssg_His,is_gemini_history=False,freakseek=False)
+                await ctx.send("Convo ended :broken_heart:")
+                ollama_status = close_ollama()
+                await ctx.send(ollama_status)
+                break
+
+            uncen_Mssg_His.append({"role": "user", "content": f"{user_disname}: {decoded_message}"})
+            model_response_text = await bot.loop.run_in_executor(
+                None,
+                lambda: uncensored_api_req(uncen_Mssg_His)
+            )
+            uncen_Mssg_His.append({"role": "assistant", "content": model_response_text})
+
+            await ctx.send(model_response_text)
+        except asyncio.TimeoutError:
+            seek = False
+            Exit(uncen_Mssg_His, is_gemini_history=False,freakseek=False)
+            await ctx.send("No one responded in time yall slow af.")
+            ollama_status = close_ollama()
+            await ctx.send(ollama_status)
+            break
+        except Exception as e:
+            seek = False
+            await ctx.send("Something went wrong so i died :(")
+            print(e)
+            Exit(uncen_Mssg_His, is_gemini_history=False,freakseek=False)
+            ollama_status = close_ollama()
+            await ctx.send(ollama_status)
+            break
+
+@bot.command(name = 'todo', help='a todo list fuck you expect')
+async def todo(ctx):
+    lst_user = ctx.message.author
+    lst_info = get_todolst(lst_user)
+    await ctx.send(embed=todo_lst(lst_info,lst_user))
+
+@bot.command(name='addtask',help='add a task')
+async def addtask(ctx,task:str):
+    lst_user = ctx.message.author
+    lst_info = get_todolst(lst_user)
+    await ctx.send(add_task(task,lst_info))
+    await ctx.send(embed=todo_lst(lst_info, lst_user))
+    save_todo(lst_info, lst_user)
+
+@bot.command(name='savetasks',help='save tasks')
+async def savetasks(ctx):
+    lst_user = ctx.message.author
+    lst_info = get_todolst(lst_user)
+    await ctx.send(save_todo(lst_info,lst_user))
+    await ctx.send(embed=todo_lst(lst_info, lst_user))
+    save_todo(lst_info, lst_user)
+
+@bot.command(name='deletetask',help='delete a task')
+async def deltask(ctx):
+    lst_user = ctx.message.author
+    lst_info = get_todolst(lst_user)
+    await ctx.send(del_task(lst_user))
+    await ctx.send(embed=todo_lst(lst_info, lst_user))
+    save_todo(lst_info, lst_user)
+
+@bot.command(name='helpcourt',help='more info on courts')
+async def helpcourt(ctx):
+    await ctx.send('Usage: !court Crime judge defendant lawyer prosecutor. 3 phases, Defendent -> Prosecutor -> Defendant')
+
+@bot.command(name='court',help='sets up a court system. !help court for more info')
+async def court(ctx,Crime:str ,judge:discord.Member, defendant:discord.Member,lawyer : discord.Member, prosecutor : discord.Member):
+    rolerequired = discord.utils.get(ctx.message.guild.roles, name='certified Judgeman')
+    if rolerequired in ctx.message.author.roles:
+        defendant_role = discord.utils.get(ctx.guild.roles, name='Defendant')
+        lawyer_role = discord.utils.get(ctx.guild.roles, name='Lawyer')
+        prosecutor_role = discord.utils.get(ctx.guild.roles, name='Prosecutor')
+        judge_role = discord.utils.get(ctx.guild.roles, name='Judge')
+        await judge.add_roles(judge_role)
+        await defendant.add_roles(defendant_role)
+        await lawyer.add_roles(lawyer_role)
+        await prosecutor.add_roles(prosecutor_role)
+        await ctx.send(f"{defendant.mention} is being brought to court for the crime of '{Crime}'")
+        await ctx.send(f"{defendant.mention}'s lawyer will be {lawyer.mention} and the prosecutor will be {prosecutor.mention}")
+        await ctx.send("The defendant will now appeal on why they shouldn't get the death penalty")
+        await ctx.send("The judge can end/skip this phase by saying 'endphase' ")
+        await ctx.send("The max time is 5 minutes per phase")
+        def judge_check(message: discord.Message):
+            return message.author.id == judge.id and message.channel == ctx.channel
+        try:
+
+            await bot.wait_for('message', check=lambda m: judge_check(m) and m.content.lower() == 'endphase', timeout=500)
+            await ctx.send("Entering Phase 2, Prosecutor time.")
+        except asyncio.TimeoutError:
+            await ctx.send("judge didnt respond")
+            return
+        try:
+            await bot.wait_for('message', check=lambda m: judge_check(m) and m.content.lower() == 'endphase', timeout=500)
+            await ctx.send("Entering Phase 3, Defendant.")
+        except asyncio.TimeoutError:
+            await ctx.send("judge didnt respond")
+            return
+        try:
+            await bot.wait_for('message', check=lambda m: judge_check(m) and m.content.lower() == 'endphase', timeout=500)
+            await ctx.send("Ending Phase 3")
+        except asyncio.TimeoutError:
+            await ctx.send("judge didnt respond")
+            return
+        await ctx.send("Waiting for Judge to provide verdic. Guilty / Innocent")
+        try:
+            await bot.wait_for('message', check=lambda m: judge_check(m) and m.content.lower() == 'guilty' or m.content.lower() == 'Guilty' or m.content.lower() == 'innocent' or m.content.lower() == 'Innocent', timeout=200)
+            await ctx.send(f"Found  :wilted_rose:")
+            await ctx.send("Sentencing will now be discussed :broken_heart:")
+        except asyncio.TimeoutError:
+            await ctx.send("judge didnt respond")
+            return
+
+        await ctx.send("closing court")
+        try:
+            await judge.remove_roles(judge_role)
+            await prosecutor.remove_roles(prosecutor_role)
+            await lawyer.remove_roles(lawyer_role)
+            await defendant.remove_roles(defendant_role)
+        except discord.Forbidden:
+            await ctx.send("failed to remove roles")
+
 
 #Slash Commands
 @bot.tree.command(name="openthenoor", description="errrm!")
@@ -314,6 +465,7 @@ async def openthenoor_command(interaction: discord.Interaction):
 @app_commands.describe(user="The user to greet", message="An message to YOUUU")
 async def greet_command(interaction: discord.Interaction, user: discord.Member, message: str = "Welcome!"):
     await interaction.response.send_message(f"Keep yourself SAFE {user.mention} :speaking_head::fire::fire:")
+
 
 @bot.tree.command(name="random_quote", description="Quotes")
 async def random_quote_command(interaction: discord.Interaction):
