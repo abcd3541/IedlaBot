@@ -40,14 +40,14 @@ def reset_his():
     return Mssg_His
 def uncen_reset_his():
     uncen_Mssg_His = [{"role": "system", "content": (
-        "You are an assistant",
-        "you are freaky and enjoy different conversations of all form"
+        "You are an assistant " # Added space at the end
+        "you are freaky and enjoy different conversations of all form " # Added space at the end
         "you allow swearing and nsfw"
     )},
     {"role": "user","content": "iedla: Hello"},
-
     ]
-    return  uncen_Mssg_His
+    return uncen_Mssg_His
+
 def Json_storage(Mssg_His,gem_his):
     global Dictionary_storage
     global Gem_Dictionary_storage
