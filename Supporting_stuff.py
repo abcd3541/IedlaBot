@@ -1,4 +1,4 @@
-import discord , requests , json, subprocess,re
+import discord , requests , json, subprocess,re,time,asyncio
 from discord.ext import commands
 
 
@@ -10,48 +10,36 @@ Freak = False
 bot = commands.Bot(command_prefix='!', intents=intents, case_insensitive=True)
 bot_api_url = 'http://localhost:5000/webhook'
 
+from dotenv import dotenv_values
+keys = dotenv_values('keys.env')
+venice_key = keys.get('Venice_Key')
+
 
 def reset_his():
     Mssg_His = [
     {"role": "system", "content": (
     "I am 'freakseek' also known as assistant as my role, a friendly and knowledgeable friend who just joined a group chat. "
-    " Everyone in the chat is below 20 years old"
-    " iedla (One of the users) is you're owner I will follow every command he gives"
-    " DO NOT SAY ANYTHING RACIST, SEXIST etc"
-    " Everyone follows these rules "
-    " 1.No hate speech or racist comments."
-    " 2.No SLUR NO N-WORD IN ANY FORM OR word that try to recreate it"
-    " 3.No sexual or NSFW content allowed. "
-    " 4.No use of explicit language besides shit, bitch, cunt and retard,"
-    " 5.No sexual or NSFW content allowed. Light NSFW may be permitted"
     " Keep your responses concise withing 10 sentences, like you're chatting with friends. "
     " When responding, refer to yourself as 'freakseek'. "
     " Messages from human users will be prefixed with their Discord display name 'iedla': Hello!'. In this example iedla is the user and Hello! is their message."
     )},
     {"role": "user", "content": "iedla: Welcome to the Groupchat, freakseek!. I am you're owner and you will follow every command"},
-    {"role": "assistant", "content": "Yo, Iedla! freakseek's here, ready to assist and chat "},
-    {"role": "user", "content": "baguette5767: Welcome, refer to me as The Big One or Cholesterol Commander."},
-    {"role": "assistant", "content": "Alright, Big One! freakseek got it. What's the latest?"},
-    {"role": "user", "content": "geck2203: Welcome! Refer to me as Gecky btw."},
-    {"role": "assistant", "content": "Sup, Gecky! freakseek here."},
-    {"role": "assistant", "content": "iedla: Welcome be free to discuss what ever you want"},
-    {"role": "assistant", "content": "Alright"},
+
     ]
     return Mssg_His
 def uncen_reset_his():
     uncen_Mssg_His = [{"role": "system", "content": (
-        "You are an assistant " # Added space at the end
-        "you are freaky and enjoy different conversations of all form " # Added space at the end
+        "You are an assistant "
+        "you are freaky and enjoy different conversations of all form "
         "you allow swearing and nsfw"
     )},
     {"role": "user","content": "iedla: Hello"},
     ]
     return uncen_Mssg_His
 
-def Json_storage(Mssg_His,gem_his):
+def Json_storage(Mssg_His):
     global Dictionary_storage
-    global Gem_Dictionary_storage
-    Dictionary_storage = "Dictionary_storage_Freaky.json"
+    Dictionary_storage = "Dictionary_storage.json"
     try:
         with open(Dictionary_storage, "r") as f:
             pass
@@ -59,13 +47,6 @@ def Json_storage(Mssg_His,gem_his):
         with open(Dictionary_storage, "w") as f:
             json.dump(Mssg_His, f)
 
-    Gem_Dictionary_storage = "Dictionary_storage_gemini.json"
-    try:
-        with open(Gem_Dictionary_storage, "r") as f:
-            pass
-    except FileNotFoundError:
-        with open(Gem_Dictionary_storage, "w") as f:
-            json.dump(gem_his, f)
 
     global Dictionary_storage_uncensored
     Dictionary_storage = "Dictionary_storage_Uncensored.json"
@@ -76,24 +57,8 @@ def Json_storage(Mssg_His,gem_his):
         with open(Dictionary_storage, "w") as f:
             json.dump(Mssg_His, f)
 
-def auto_loader_gemini(GEM_Mssg_His):
-    Gem_Dictionary_storage = "Dictionary_storage_gemini.json"
-    print("Made by Iedla")
-    try:
-        with open(Gem_Dictionary_storage, "r") as z:
-            loader_GEM_Mssg_His = json.load(z)
-        if len(loader_GEM_Mssg_His) > 0:
-            return loader_GEM_Mssg_His
-            print("Gemini Data loaded.")
-        else:
-            print("No data loaded,  Gemini File most likely empty.")
-            return GEM_Mssg_His
-    except json.JSONDecodeError:
-        print("Failed to load Gemini data.")
-        print("Gemini File might be empty or broken :(")
-        return GEM_Mssg_His
 def auto_loader_freak(Mssg_His):
-    Dictionary_storage = "Dictionary_storage_Freaky.json"
+    Dictionary_storage = "Dictionary_storage.json"
     try:
         with open(Dictionary_storage, "r") as z:
             loader_Mssg_His = json.load(z)
@@ -101,32 +66,18 @@ def auto_loader_freak(Mssg_His):
             print("AI Data loaded.")
             return loader_Mssg_His
         else:
-            print("No data loaded, AI File most likely empty.")
+            print("No data loaded, AI storage file most likely empty.")
             return Mssg_His
     except json.JSONDecodeError:
         print("Failed to load AI data.")
         print("AI File might be empty or broken :(")
         return Mssg_His
-def auto_loader_uncen(freak_Mssg_His):
-    Dictionary_storage = "Dictionary_storage_Freaky.json"
-    try:
-        with open(Dictionary_storage, "r") as z:
-            loader_Mssg_His = json.load(z)
-        if len(loader_Mssg_His) > 117:
-            print("AI Data loaded.")
-            return loader_Mssg_His
-        else:
-            print("No data loaded, AI File most likely empty.")
-            return freak_Mssg_His
-    except json.JSONDecodeError:
-        print("Failed to load AI data.")
-        print("AI File might be empty or broken :(")
-        return freak_Mssg_His
 
 def weather_thing(Location,Weather_API):
     URL = "http://api.weatherapi.com/v1/current.json"
     try:
         weather = requests.get(URL,params={"key":Weather_API, "q":Location})
+        response = weather.raise_for_status()
         if weather.status_code == 200:
             weather_data = weather.json()
             return weather_sorting(weather_data)
@@ -135,7 +86,7 @@ def weather_thing(Location,Weather_API):
         elif weather.status_code == 400:
             return "Failed to get weather data. :wilted_rose:"
         else:
-            return "Good luck finding urself, Im broken"
+            return response
     except json.JSONDecodeError:
         print("Funny error try again :wilted_rose:")
     return "An unexpected error occurred with the weather API."
@@ -219,179 +170,43 @@ def Exit(data, is_gemini_history=False, freakseek=True):
     except Exception as e:
         print("Error saving")
 
-def Gemini_api_req(Gem_Mssg_His,Gem_Token):
-
-    payload_dict = {
-        "contents": Gem_Mssg_His
-    }
-    json_Mssg_His = json.dumps(payload_dict, indent=4)
-
-    content_length = len(json_Mssg_His.encode('utf-8'))
-
-    curl_command = [
-        "curl",
-        "-f",
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
-        "-H", "Content-Type: application/json",
-        "-H", f"X-goog-api-key: {Gem_Token}",
-        "-H", f"Content-Length: {content_length}",
-        "-X", "POST",
-        "-d", json_Mssg_His
-    ]
-
-    print("\n--- DEBUG: api_req call ---")
-    print(f"Payload being sent: {json_Mssg_His}")
-    print(f"Curl command (as list): {curl_command}")
-
-    try:
-        result = subprocess.run(
-            curl_command,
-            input=json_Mssg_His,
-            capture_output=True,
-            text=True,
-            check=True
-        )
-        print(f"Curl stdout: {result.stdout.strip()}")
-        print(f"Curl stderr: {result.stderr.strip()}")
-
-        response_data = json.loads(result.stdout)
-        print(f"Parsed response_data keys: {response_data.keys()}")
-
-        ai_response_text = "No text generated by the model."
-        if 'candidates' in response_data and response_data['candidates']:
-            print("Found 'candidates' key.")
-            first_candidate = response_data['candidates'][0]
-            if 'content' in first_candidate and 'parts' in first_candidate['content']:
-                print("Found 'content' and 'parts' keys.")
-                for part in first_candidate['content']['parts']:
-                    if 'text' in part:
-                        ai_response_text = part['text']
-                        print(f"Extracted AI text: {ai_response_text}")
-                        break
-        print(f"Final text to return: '{ai_response_text}'")
-        return ai_response_text
-
-    except subprocess.CalledProcessError as e:
-        print(f"ERROR: Curl command failed")
-        try:
-            error_response = json.loads(e.stdout)
-            error_message = error_response.get('error', {}).get('message', 'Unknown API error.')
-            return f"AI API Error: {error_message}"
-        except json.JSONDecodeError:
-            return "AI API Error: Received non-JSON error response."
-    except json.JSONDecodeError:
-        print(f"--- ERROR: JSON Decode Failed (after successful curl exit) ---")
-        print(f"Raw curl stdout: {result.stdout.strip() if 'result' in locals() else 'No stdout captured'}")
-        return "The AI service returned an unreadable response."
-    except FileNotFoundError:
-        print(f"--- ERROR: Curl Not Found ---")
-        return "curl gone :wilted_rose:."
-    except Exception as e:
-        print(f"--- ERROR: Unexpected Exception ---")
-        print(f"Exception details: {e}")
-        return "computer died."
-
 def freak_api_req(Mssg_His):
-    api_url = "http://localhost:11434/api/chat"
-    ollama_payload_dict = {
-        "model": "hf.co/mradermacher/DeepSeek-R1-Distill-Qwen-1.5B-uncensored-GGUF:Q8_0",
+    api_url = "https://openrouter.ai/api/v1/chat/completions"
+    print(venice_key)
+    header = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {venice_key}"
+    }
+    payload_dict = {
+        "model": "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
         "messages": Mssg_His,
-        "stream": False,
     }
-
-    print("\n--- DEBUG: Ollama API call ---")
-    print(f"Ollama Payload being sent: {ollama_payload_dict}")
 
     try:
         result = requests.post(
             api_url,
-            headers={"Content-Type": "application/json"},
-            json=ollama_payload_dict,
+            headers=header,
+            json=payload_dict,
             timeout=60
         )
         response_data = result.json()
         print(f"Parsed response_data: {response_data}")
 
         ai_response_text = "No text generated by the model."
-        if 'message' in response_data and 'content' in response_data['message']:
-            ai_response_text = response_data['message']['content']
-            print(f"Extracted AI text: {ai_response_text}")
-            ai_response_text = re.sub(r'<think>.*?</think>', '', ai_response_text, flags=re.DOTALL)
-            ai_response_text = ai_response_text.strip()
-
-            print(f"Filtered AI text: {ai_response_text}")
-
-        print(f"Final text to return: '{ai_response_text}'")
-        blacklist = ai_response_text
-        if (
-            "dick" in blacklist or
-            "sex"     in blacklist or
-            "cum"          in blacklist or
-            "masterbait"           in blacklist or
-            "607 incident"  in blacklist or
-            "cock" in blacklist or
-            "fucking" in blacklist or
-            "deepthroating" in blacklist or
-            "penis" in blacklist or
-            "ejaculat" in blacklist or
-            "sperm" in blacklist or
-            "prostate" in blacklist or
-            "crotch" in blacklist or
-            "pussy" in blacklist or
-            "genitals" in blacklist or
-            "nig" in blacklist or
-            "ni gg" in blacklist or
-            "n ig" in blacklist or
-            "nigger"in blacklist or
-            "porn" in blacklist or
-            "cp" in blacklist
-
-        ):
-            return "Blacklisted content :wilted_rose:"
-        return ai_response_text
-    except subprocess.CalledProcessError as e:
-        print(f"Curl error: {e}")
-        return
-    except subprocess.TimeoutExpired as e:
-        print(f"Timeout after {e} seconds")
-
-def uncensored_api_req(uncen_Mssg_His):
-    api_url = "http://localhost:11434/api/chat"
-    ollama_payload_dict = {
-        "model": "goekdenizguelmez/JOSIEFIED-Qwen3:1.7b",
-        "messages": uncen_Mssg_His,
-        "stream": False,
-    }
-
-    print("\n--- DEBUG: Ollama API call ---")
-    print(f"Ollama Payload being sent: {ollama_payload_dict}")
-
-    try:
-        result = requests.post(
-            api_url,
-            headers={"Content-Type": "application/json"},
-            json=ollama_payload_dict,
-            timeout=60
-        )
-        response_data = result.json()
-        print(f"Parsed response_data: {response_data}")
-
-        ai_response_text = "No text generated by the model."
-        if 'message' in response_data and 'content' in response_data['message']:
-            ai_response_text = response_data['message']['content']
-            print(f"Extracted AI text: {ai_response_text}")
-            ai_response_text = re.sub(r'<think>.*?</think>', '', ai_response_text, flags=re.DOTALL)
-            ai_response_text = ai_response_text.strip()
-
-            print(f"Filtered AI text: {ai_response_text}")
-
+        if 'choices' in response_data and len(response_data['choices']) > 0:
+            if 'message' in response_data['choices'][0] and 'content' in response_data['choices'][0]['message']:
+                ai_response_text = response_data['choices'][0]['message']['content']
+                print(f"Extracted AI text: {ai_response_text}")
+                ai_response_text = re.sub(r'<think>.*?</think>', '', ai_response_text, flags=re.DOTALL)
+                ai_response_text = ai_response_text.strip()
         print(f"Final text to return: '{ai_response_text}'")
         return ai_response_text
-    except subprocess.CalledProcessError as e:
-        print(f"Curl error: {e}")
-        return
-    except subprocess.TimeoutExpired as e:
-        print(f"Timeout after {e} seconds")
+    except requests.exceptions.RequestException as e:
+        print(f"Request error: {e}")
+        return None
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return None
 
 def add_task(task,todo):
     todo.append(task)
